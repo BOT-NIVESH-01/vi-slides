@@ -141,8 +141,9 @@ interface JoinGroupResponse {
     message: string;
 }
 
-export async function getAssignmentsRequest(token: string): Promise<AssignmentItem[]> {
-    const response = await apiRequest<AssignmentListResponse>("/assignments", { token });
+export async function getAssignmentsRequest(token: string, groupId?: string): Promise<AssignmentItem[]> {
+    const suffix = groupId ? `?groupId=${encodeURIComponent(groupId.trim().toUpperCase())}` : "";
+    const response = await apiRequest<AssignmentListResponse>(`/assignments${suffix}`, { token });
     return response.data;
 }
 
