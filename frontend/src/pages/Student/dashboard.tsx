@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { joinSessionRequest } from "../../lib/api";
 import Navbar from "../../components/Navbar";
 import WelcomeCard from "../../components/WelcomeCard";
 import "./Student.css";
@@ -13,10 +14,16 @@ import sessionIcon from "../../assets/session.png";
 const StudentDashboard: React.FC = () => {
   const [code, setCode] = useState(""); 
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
-  const handleJoin = () => {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Student Dashboard - Vi-Slides';
+  }, []);
+
+  const handleJoin = async () => {
     if (code.trim().length === 0) {
       setError("Code should be entered");
       return;
@@ -27,8 +34,27 @@ const StudentDashboard: React.FC = () => {
       return;
     }
 
+    if (!token) {
+      setError("You must be logged in to join a session");
+      return;
+    }
+
     setError("");
-    navigate("/student/session", { state: { sessionCode: code } });
+    setIsLoading(true);
+
+    try {
+      const session = await joinSessionRequest(code.toUpperCase(), token);
+      
+      // Navigate to session with the session code
+      const sessionCode = session.code;
+      navigate(`/student/session/${sessionCode}`, { 
+        state: { session } 
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid session code");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -89,9 +115,14 @@ const StudentDashboard: React.FC = () => {
                     value={code}
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                     maxLength={6}
+                    disabled={isLoading}
                   />
-                  <button className="vi-btn vi-btn-primary" onClick={handleJoin}>
-                    Join
+                  <button 
+                    className="vi-btn vi-btn-primary" 
+                    onClick={handleJoin}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Joining...' : 'Join'}
                   </button>
                 </div>
                 {error && <p className="error-text">{error}</p>}

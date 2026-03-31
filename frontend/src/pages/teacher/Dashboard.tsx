@@ -12,7 +12,7 @@ import assignmentIcon from '../../assets/assignment.png'
 import groupsIcon from '../../assets/groups.png'
 import joinIcon from '../../assets/join.png'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5001/api'
 
 interface Session {
   id: string
@@ -29,6 +29,11 @@ function Dashboard() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [dashboardData, setDashboardData] = useState<DashboardResponse | null>(null)
+
+  // Set page title
+  useEffect(() => {
+    document.title = 'Teacher Dashboard - Vi-Slides'
+  }, [])
 
   const fetchDashboardMetrics = useCallback(async () => {
     if (!token) return
@@ -49,7 +54,7 @@ function Dashboard() {
         headers['Authorization'] = `Bearer ${token}`
       }
 
-      const response = await fetch(`${API_BASE_URL}/session`, { headers })
+      const response = await fetch(`${API_BASE_URL}/sessions`, { headers })
       const data = await response.json()
 
       if (response.ok && data.success) {
@@ -128,7 +133,11 @@ function Dashboard() {
         <div className="section">
           <h2 className="section-title">Quick Actions</h2>
           <div className="actions-grid">
-            <Link to="/teacher/session/create" className="action-link">
+            <Link 
+              to="/teacher/session/create" 
+              className="action-link"
+              onClick={() => console.log('[Dashboard] Navigating to /teacher/session/create')}
+            >
               <div className="vi-card vi-card-orange action-card-large">
                 <img src={joinIcon} alt="create" className="action-card-icon" />
                 <div className="action-card-content">
@@ -138,7 +147,11 @@ function Dashboard() {
                 </div>
               </div>
             </Link>
-            <Link to="/teacher/assignments" className="action-link">
+            <Link 
+              to="/teacher/assignments" 
+              className="action-link"
+              onClick={() => console.log('[Dashboard] Navigating to /teacher/assignments')}
+            >
               <div className="vi-card vi-card-teal action-card-large">
                 <img src={assignmentIcon} alt="assignments" className="action-card-icon" />
                 <div className="action-card-content">
@@ -167,7 +180,21 @@ function Dashboard() {
               recentSessions.map(session => (
                 <div key={session.id} className="vi-card session-card">
                   <div className="session-info">
-                    <h3 className="session-title">{session.title}</h3>
+                    <h3 className="session-title">
+                      {session.title}
+                      {session.status === 'ended' && (
+                        <span style={{ 
+                          marginLeft: '0.5rem', 
+                          fontSize: '0.75rem', 
+                          padding: '0.2rem 0.5rem', 
+                          background: 'var(--bg-secondary)', 
+                          borderRadius: 'var(--radius-sm)',
+                          color: 'var(--text-secondary)'
+                        }}>
+                          Ended
+                        </span>
+                      )}
+                    </h3>
                     <div className="session-meta">
                       <span className="session-code">Code: {session.code}</span>
                       <span className="meta-dot">•</span>
@@ -176,8 +203,13 @@ function Dashboard() {
                       <span>{session.studentsJoined} students</span>
                     </div>
                   </div>
-                  <Link to={`/teacher/session/${session.id}`}>
-                    <button className="vi-btn vi-btn-outline">View</button>
+                  <Link to={session.status === 'ended' 
+                    ? `/teacher/session/${session.code}/summary` 
+                    : `/teacher/session/${session.code}`
+                  }>
+                    <button className="vi-btn vi-btn-outline">
+                      {session.status === 'ended' ? 'Summary' : 'View'}
+                    </button>
                   </Link>
                 </div>
               ))
