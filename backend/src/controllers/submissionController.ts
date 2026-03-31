@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import Submission from '../models/Submission';
 import Assignment from '../models/Assignment';
 import User from '../models/User';
+import AssignmentGroupMembership from '../models/AssignmentGroupMembership';
 import { sendGradeNotification } from '../services/emailService';
 
 // @desc    Submit assignment
@@ -21,6 +22,16 @@ export const submitAssignment = async (req: Request, res: Response): Promise<voi
         const assignment = await Assignment.findById(assignmentId);
         if (!assignment) {
             res.status(404).json({ success: false, message: 'Assignment not found' });
+            return;
+        }
+
+        const membership = await AssignmentGroupMembership.findOne({
+            student: req.user._id,
+            groupId: assignment.groupId
+        });
+
+        if (!membership) {
+            res.status(403).json({ success: false, message: 'Join this assignment group before submitting' });
             return;
         }
 
