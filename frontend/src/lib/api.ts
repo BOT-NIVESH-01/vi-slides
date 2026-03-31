@@ -72,3 +72,120 @@ export async function meRequest(token: string): Promise<AuthUser> {
 export function dashboardRequest(role: UserRole, token: string): Promise<DashboardResponse> {
     return apiRequest<DashboardResponse>(`/dashboard/${role}`, { token });
 }
+
+export interface AssignmentTeacher {
+    _id: string;
+    name: string;
+    email: string;
+}
+
+export interface AssignmentItem {
+    _id: string;
+    title: string;
+    description: string;
+    groupId: string;
+    referenceUrl?: string | null;
+    maxMarks: number;
+    deadline: string;
+    status: "active" | "closed";
+    teacher?: AssignmentTeacher;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+interface AssignmentListResponse {
+    success: boolean;
+    data: AssignmentItem[];
+}
+
+interface AssignmentDetailResponse {
+    success: boolean;
+    data: AssignmentItem;
+}
+
+interface SubmissionResponse {
+    success: boolean;
+    data: unknown;
+}
+
+interface CreateAssignmentResponse {
+    success: boolean;
+    data: AssignmentItem;
+}
+
+export interface SubmissionStudent {
+    _id: string;
+    name: string;
+    email: string;
+}
+
+export interface SubmissionItem {
+    _id: string;
+    assignment: string | AssignmentItem;
+    student: SubmissionStudent;
+    submissionText: string;
+    pdfUrl?: string | null;
+    marksObtained?: number | null;
+    feedback?: string;
+    status: "pending" | "submitted" | "graded";
+    isLate: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+interface SubmissionListResponse {
+    success: boolean;
+    data: SubmissionItem[];
+}
+
+interface JoinGroupResponse {
+    success: boolean;
+    message: string;
+}
+
+export async function getAssignmentsRequest(token: string): Promise<AssignmentItem[]> {
+    const response = await apiRequest<AssignmentListResponse>("/assignments", { token });
+    return response.data;
+}
+
+export async function getAssignmentByIdRequest(id: string, token: string): Promise<AssignmentItem> {
+    const response = await apiRequest<AssignmentDetailResponse>(`/assignments/${id}`, { token });
+    return response.data;
+}
+
+export function submitAssignmentRequest(
+    input: { assignmentId: string; submissionText: string; pdfUrl?: string },
+    token: string
+): Promise<SubmissionResponse> {
+    return apiRequest<SubmissionResponse>("/submissions", {
+        method: "POST",
+        token,
+        body: JSON.stringify(input)
+    });
+}
+
+export async function createAssignmentRequest(
+    input: { title: string; description: string; groupId: string; referenceUrl?: string; maxMarks: number; deadline: string },
+    token: string
+): Promise<AssignmentItem> {
+    const response = await apiRequest<CreateAssignmentResponse>("/assignments", {
+        method: "POST",
+        token,
+        body: JSON.stringify(input)
+    });
+    return response.data;
+}
+
+export async function getSubmissionsByAssignmentRequest(assignmentId: string, token: string): Promise<SubmissionItem[]> {
+    const response = await apiRequest<SubmissionListResponse>(`/submissions/assignment/${assignmentId}`, { token });
+    return response.data;
+}
+
+export async function joinAssignmentGroupRequest(groupId: string, token: string): Promise<string> {
+    const response = await apiRequest<JoinGroupResponse>("/assignments/join-group", {
+        method: "POST",
+        token,
+        body: JSON.stringify({ groupId })
+    });
+    return response.message;
+}
