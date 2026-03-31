@@ -12,6 +12,7 @@ import "./Student.css";
 const Assignments: React.FC = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
+  const [activeGroupId, setActiveGroupId] = useState<string>(() => localStorage.getItem("student_assignment_group_id") ?? "");
   const [showBox, setShowBox] = useState(false);
   const [code, setCode] = useState("");
   const [assignments, setAssignments] = useState<AssignmentItem[]>([]);
@@ -20,8 +21,8 @@ const Assignments: React.FC = () => {
   const [joinMessage, setJoinMessage] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
 
-  const fetchAssignmentsData = async (authToken: string) => {
-    const data = await getAssignmentsRequest(authToken);
+  const fetchAssignmentsData = async (authToken: string, groupId?: string) => {
+    const data = await getAssignmentsRequest(authToken, groupId);
     setAssignments(data);
     setError(null);
   };
@@ -35,7 +36,13 @@ const Assignments: React.FC = () => {
       }
 
       try {
-        await fetchAssignmentsData(token);
+        if (!activeGroupId) {
+          setAssignments([]);
+          setError(null);
+          return;
+        }
+
+        await fetchAssignmentsData(token, activeGroupId);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to load assignments";
         setError(message);
@@ -45,7 +52,7 @@ const Assignments: React.FC = () => {
     }
 
     void loadAssignments();
-  }, [token]);
+  }, [token, activeGroupId]);
 
   const handleJoinGroup = async () => {
     if (!token) {
@@ -62,10 +69,13 @@ const Assignments: React.FC = () => {
     setJoinMessage(null);
 
     try {
-      const message = await joinAssignmentGroupRequest(code.trim().toUpperCase(), token);
+      const normalizedGroupId = code.trim().toUpperCase();
+      const message = await joinAssignmentGroupRequest(normalizedGroupId, token);
+      localStorage.setItem("student_assignment_group_id", normalizedGroupId);
+      setActiveGroupId(normalizedGroupId);
       setJoinMessage(message);
       setCode("");
-      await fetchAssignmentsData(token);
+      await fetchAssignmentsData(token, normalizedGroupId);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to join assignment group";
       setJoinMessage(message);
@@ -91,7 +101,7 @@ const Assignments: React.FC = () => {
           <div className="student-assignment-header">
             <div className="student-left-section">
               <h1>Assignments</h1>
-              <p>View and submit your assignments</p>
+              <p>View and submit assignments for your joined group</p>
             </div>
 
             <div className="student-right-section">
@@ -132,6 +142,11 @@ const Assignments: React.FC = () => {
         {/* GROUP CONTAINER */}
         <div className="student-group-section">
           <h2 className="section-title">Available Assignments</h2>
+          {activeGroupId ? (
+            <p className="student-group-id">Showing group: {activeGroupId}</p>
+          ) : (
+            <p className="student-group-id">Join a group to view assignments.</p>
+          )}
 
           <div className="student-group-cards">
             {loading ? (
