@@ -30,12 +30,13 @@ export const submitAssignment = async (req: Request, res: Response): Promise<voi
             student: req.user._id
         });
 
+        // Keep submissions one-per-student per assignment.
         if (existingSubmission) {
             res.status(400).json({ success: false, message: 'You have already submitted this assignment' });
             return;
         }
 
-        // Check if submission is late
+        // Mark whether the student submitted after the deadline.
         const isLate = new Date() > new Date(assignment.deadline);
 
         const submission = await Submission.create({
