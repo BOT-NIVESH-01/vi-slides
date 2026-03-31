@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { joinSessionRequest } from "../../lib/api";
+// import { joinSessionRequest } from "../../lib/api";
 import Navbar from "../../components/Navbar";
 import WelcomeCard from "../../components/WelcomeCard";
 import "./Student.css";
