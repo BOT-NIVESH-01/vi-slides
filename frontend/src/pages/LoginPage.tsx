@@ -90,14 +90,14 @@ function LoginPage() {
 
     return (
         <section className="auth-grid">
-            <article className="auth-copy auth-teal">
+            <article className="auth-copy auth-orange">
                 <img src={logo} alt="Vi-SlideS" className="auth-logo" />
                 <p className="kicker">Welcome Back</p>
                 <h2>Sign in to your Vi-SlideS workspace</h2>
                 <p>Teachers manage sessions. Students join discussions. One secure account flow for both roles.</p>
             </article>
 
-            <article className="auth-form-card auth-orange">
+            <article className="auth-form-card auth-teal">
                 <h3>{forgotMode ? "Forgot Password" : "Log In"}</h3>
 
                 {!forgotMode && (
