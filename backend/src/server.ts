@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import http from 'http';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
 import connectDB from './config/database';
 import { initSocket } from './config/socket';
 import authRoutes from './routes/auth';
@@ -13,7 +14,7 @@ import submissionRoutes from './routes/submission';
 import guestRoutes from './routes/guest';
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Initialize express app
 const app: Application = express();
